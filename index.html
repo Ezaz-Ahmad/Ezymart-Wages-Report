@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EzyMart Wages Calculator</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/intl/1.2.5/Intl.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Landing Page -->
+    <div id="landing-page" class="screen active">
+        <div class="landing-content">
+            <h1 class="landing-title">EzyMart Wages Calculator</h1>
+            <p class="landing-subtitle">Simplify Your Wage Calculations with Ease</p>
+            <button class="landing-btn" onclick="showCalculator()">Get Started</button>
+        </div>
+        <div class="landing-wave"></div>
+    </div>
+
+    <!-- Calculator Page -->
+    <div id="calculator-page" class="screen">
+        <div class="container">
+            <h1 class="calculator-title">Wages Calculator</h1>
+            <form id="wages-form" class="card">
+                <div class="form-section">
+                    <h2>Employee Details</h2>
+                    <div class="form-group">
+                        <label for="date">Date:</label>
+                        <input type="date" id="date" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="employee-name">Employee Name:</label>
+                        <input type="text" id="employee-name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="employee-address">Employee Address:</label>
+                        <input type="text" id="employee-address">
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h2>Work Schedule</h2>
+                    <div id="shifts-container"></div>
+                </div>
+
+                <div class="form-section">
+                    <h2>Rates & Expenses</h2>
+                    <div class="form-group">
+                        <label for="gosford-weekday-rate">Gosford Weekday Rate ($):</label>
+                        <input type="number" id="gosford-weekday-rate" step="0.01" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="gosford-weekend-rate">Gosford Weekend Rate ($):</label>
+                        <input type="number" id="gosford-weekend-rate" step="0.01" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="islington-rate">Islington Rate ($):</label>
+                        <input type="number" id="islington-rate" step="0.01" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="adamstown-rate">Adamstown Rate ($):</label>
+                        <input type="number" id="adamstown-rate" step="0.01" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="fuel-cost">Fuel Cost per Day (Gosford) ($):</label>
+                        <input type="number" id="fuel-cost" step="0.01" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="others">Other Expenses ($):</label>
+                        <input type="number" id="others" step="0.01">
+                    </div>
+                    <div class="form-group">
+                        <label for="expense-explanation">Expense Explanation:</label>
+                        <textarea id="expense-explanation" disabled></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="tax-amount">Amount Transferred ($):</label>
+                        <input type="number" id="tax-amount" step="0.01" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="pouch-day">Pouch Day:</label>
+                        <input type="text" id="pouch-day">
+                    </div>
+                    <div class="form-group">
+                        <label for="pouch-date">Pouch Date:</label>
+                        <input type="date" id="pouch-date">
+                    </div>
+                    <div class="form-group">
+                        <label for="closing-amount">Closing Amount ($):</label>
+                        <input type="number" id="closing-amount" step="0.01" required>
+                    </div>
+                </div>
+
+                <div class="buttons">
+                    <button type="button" onclick="calculateWages()" class="btn-primary">Calculate</button>
+                    <button type="button" onclick="clearForm()" class="btn-secondary">Clear</button>
+                </div>
+            </form>
+            <footer>Developed by Ezaz Ahmad | Version: 1.1.3V</footer>
+        </div>
+    </div>
+
+    <!-- Result Modal -->
+    <div id="result-modal" class="modal">
+        <div class="modal-content card">
+            <h2>Total Wages Breakdown</h2>
+            <div id="result-content" class="modal-body"></div>
+            <div class="modal-buttons">
+                <button onclick="closeModal()" class="btn-secondary">OK</button>
+                <button onclick="saveAsPDF()" class="btn-primary">Save as PDF</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Wave Animation Overlay -->
+    <div id="wave-overlay" class="wave-overlay">
+        <div class="wave-message">Processing your request</div>
+        <div class="wave"></div>
+        <div class="wave"></div>
+        <div class="wave"></div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
