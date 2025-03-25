@@ -312,7 +312,7 @@ async function saveAsPDF() {
         height: 20,
         color: rgb(0.95, 0.95, 0.95),
     });
-    page1.drawText('Developed by Ezaz Ahmad | Version: 1.1.3V | Page 1 of 2', {
+    page1.drawText('Developed by Ezaz Ahmad | Version: 2.0.1V | Page 1 of 2', {
         x: 40,
         y: 30,
         font,
@@ -373,7 +373,7 @@ y = drawTextPage2(`The remaining amount has been left in the usual place for Gos
         height: 20,
         color: rgb(0.95, 0.95, 0.95),
     });
-    page2.drawText('Developed by Ezaz Ahmad | Version: 1.1.3V | Page 2 of 2', {
+    page2.drawText('Developed by Ezaz Ahmad | Version: 2.0.1V | Page 2 of 2', {
         x: 40,
         y: 30,
         font,
