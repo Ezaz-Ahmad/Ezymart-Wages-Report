@@ -3,6 +3,13 @@ let wageDetails = days.map(day => ({ day, shifts: [{ startTime: null, endTime: n
 
 document.addEventListener('DOMContentLoaded', () => {
     const shiftsContainer = document.getElementById('shifts-container');
+    
+    // Load saved data from localStorage
+    const savedWageDetails = localStorage.getItem('wageDetails');
+    if (savedWageDetails) {
+        wageDetails = JSON.parse(savedWageDetails);
+    }
+
     days.forEach(day => {
         const dayDiv = document.createElement('div');
         dayDiv.className = 'shift-container';
@@ -29,6 +36,24 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
         `;
         shiftsContainer.appendChild(dayDiv);
+
+        // Populate saved data into the UI
+        const dayData = wageDetails.find(d => d.day === day);
+        const shift = dayData.shifts[0];
+        const checkBox = document.getElementById(`check-${day}`);
+        const startInput = document.getElementById(`start-${day}`);
+        const endInput = document.getElementById(`end-${day}`);
+        const locSelect = document.getElementById(`loc-${day}`);
+
+        if (shift.startTime || shift.endTime) {
+            checkBox.checked = true;
+            startInput.disabled = false;
+            endInput.disabled = false;
+            locSelect.disabled = false;
+            startInput.value = shift.startTime || '';
+            endInput.value = shift.endTime || '';
+            locSelect.value = shift.location || 'Gosford';
+        }
     });
 });
 
@@ -63,6 +88,8 @@ function toggleDay(day, checked) {
         startInput.value = '';
         endInput.value = '';
         locSelect.value = 'Gosford';
+        // Save updated wageDetails to localStorage
+        localStorage.setItem('wageDetails', JSON.stringify(wageDetails));
     }
 }
 
@@ -73,6 +100,8 @@ function updateShift(day, index, field, value) {
     } else {
         dayData.shifts[index][field] = value;
     }
+    // Save updated wageDetails to localStorage
+    localStorage.setItem('wageDetails', JSON.stringify(wageDetails));
 }
 
 function calculateDuration(start, end) {
@@ -402,6 +431,11 @@ y = drawTextPage2(`The remaining amount has been left in the usual place for Gos
         link.click();
         overlay.style.display = 'none';
         closeModal();
+        // Clear localStorage after PDF generation
+        localStorage.removeItem('wageDetails');
+        // Reset wageDetails to initial state
+        wageDetails = days.map(day => ({ day, shifts: [{ startTime: null, endTime: null, location: 'Gosford' }] }));
+        clearForm(); // Reset the UI
     }, 2000);
 }
 
@@ -424,6 +458,8 @@ function clearForm() {
         document.getElementById(`loc-${day}`).value = 'Gosford';
     });
     document.getElementById('expense-explanation').disabled = true;
+    // Clear localStorage
+    localStorage.removeItem('wageDetails');
 }
 
 document.getElementById('others').addEventListener('input', (e) => {
