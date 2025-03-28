@@ -33,8 +33,19 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function showCalculator() {
-    document.getElementById('landing-page').classList.remove('active');
-    document.getElementById('calculator-page').classList.add('active');
+    const landingPage = document.getElementById('landing-page');
+    const calculatorPage = document.getElementById('calculator-page');
+
+    // Remove active class from landing page and hide it completely
+    landingPage.classList.remove('active');
+    landingPage.style.display = 'none'; // Explicitly hide it
+
+    // Show calculator page and make it active
+    calculatorPage.style.display = 'block'; // Ensure it’s visible
+    calculatorPage.classList.add('active');
+
+    // Prevent scrolling on the body when transitioning
+    document.body.style.overflow = 'auto'; // Allow scrolling on calculator page
 }
 
 function toggleDay(day, checked) {
@@ -312,7 +323,7 @@ async function saveAsPDF() {
         height: 20,
         color: rgb(0.95, 0.95, 0.95),
     });
-    page1.drawText('Developed by Ezaz Ahmad | Version: 2.0.1V | Page 1 of 2', {
+    page1.drawText('Developed by Ezaz Ahmad | Version: 1.1.3V | Page 1 of 2', {
         x: 40,
         y: 30,
         font,
@@ -373,7 +384,7 @@ y = drawTextPage2(`The remaining amount has been left in the usual place for Gos
         height: 20,
         color: rgb(0.95, 0.95, 0.95),
     });
-    page2.drawText('Developed by Ezaz Ahmad | Version: 2.0.1V | Page 2 of 2', {
+    page2.drawText('Developed by Ezaz Ahmad | Version: 1.1.3V | Page 2 of 2', {
         x: 40,
         y: 30,
         font,
