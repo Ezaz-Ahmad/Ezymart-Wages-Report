@@ -184,6 +184,72 @@ textarea {
     max-width: 400px;
     transition: transform 0.3s ease;
 }
+.shifts-list {
+    margin-top: 10px;
+}
+
+.shift-entry {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin: 10px 0;
+    padding: 10px;
+    background: #fff;
+    border: 1px solid #e0e4e8;
+    border-radius: 8px;
+}
+
+.shift-entry .form-group {
+    flex: 1;
+    min-width: 120px;
+}
+
+.btn-add-shift {
+    background: #00c4cc;
+    color: white;
+    padding: 8px 20px;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.3s ease, transform 0.3s ease;
+    margin-top: 10px;
+}
+
+.btn-add-shift:hover {
+    background: #009ba1;
+    transform: scale(1.05);
+}
+
+.btn-add-shift:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+    transform: none;
+}
+.btn-remove-shift {
+    background: #ff4d4d;
+    color: white;
+    padding: 8px 20px;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.3s ease, transform 0.3s ease;
+    margin-left: 10px;
+}
+
+.btn-remove-shift:hover {
+    background: #cc0000;
+    transform: scale(1.05);
+}
+
+.btn-remove-shift:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+    transform: none;
+}
 
 .shift-container:hover {
     transform: translateY(-5px);
