@@ -13,49 +13,107 @@ document.addEventListener('DOMContentLoaded', () => {
     days.forEach(day => {
         const dayDiv = document.createElement('div');
         dayDiv.className = 'shift-container';
+        dayDiv.id = `shift-container-${day}`;
         dayDiv.innerHTML = `
             <div class="checkbox-container">
                 <input type="checkbox" id="check-${day}" onchange="toggleDay('${day}', this.checked)">
                 <label for="check-${day}">${day}</label>
             </div>
-            <div class="form-group">
-                <label for="start-${day}">Start Time:</label>
-                <input type="time" id="start-${day}" disabled onchange="updateShift('${day}', 0, 'startTime', this.value)">
-            </div>
-            <div class="form-group">
-                <label for="end-${day}">End Time:</label>
-                <input type="time" id="end-${day}" disabled onchange="updateShift('${day}', 0, 'endTime', this.value)">
-            </div>
-            <div class="form-group">
-                <label for="loc-${day}">Location:</label>
-                <select id="loc-${day}" disabled onchange="updateShift('${day}', 0, 'location', this.value)">
-                    <option value="Gosford">Gosford</option>
-                    <option value="Islington">Islington</option>
-                    <option value="Adamstown">Adamstown</option>
-                </select>
-            </div>
+            <div id="shifts-${day}" class="shifts-list"></div>
+            <button class="btn-add-shift" id="add-shift-${day}" onclick="addShift('${day}')" disabled>Add Shift</button>
         `;
         shiftsContainer.appendChild(dayDiv);
 
-        // Populate saved data into the UI
+        // Populate saved shifts into the UI
         const dayData = wageDetails.find(d => d.day === day);
-        const shift = dayData.shifts[0];
+        const shiftsList = document.getElementById(`shifts-${day}`);
         const checkBox = document.getElementById(`check-${day}`);
-        const startInput = document.getElementById(`start-${day}`);
-        const endInput = document.getElementById(`end-${day}`);
-        const locSelect = document.getElementById(`loc-${day}`);
+        const addShiftBtn = document.getElementById(`add-shift-${day}`);
 
-        if (shift.startTime || shift.endTime) {
-            checkBox.checked = true;
-            startInput.disabled = false;
-            endInput.disabled = false;
-            locSelect.disabled = false;
-            startInput.value = shift.startTime || '';
-            endInput.value = shift.endTime || '';
-            locSelect.value = shift.location || 'Gosford';
-        }
+        dayData.shifts.forEach((shift, index) => {
+            const shiftDiv = createShiftInputs(day, index, shift);
+            shiftsList.appendChild(shiftDiv);
+
+            if (shift.startTime || shift.endTime) {
+                checkBox.checked = true;
+                addShiftBtn.disabled = false;
+                toggleShiftInputs(day, index, true);
+            }
+        });
     });
 });
+
+function createShiftInputs(day, index, shift) {
+    const shiftDiv = document.createElement('div');
+    shiftDiv.className = 'shift-entry';
+    shiftDiv.innerHTML = `
+        <div class="form-group">
+            <label for="start-${day}-${index}">Start Time:</label>
+            <input type="time" id="start-${day}-${index}" disabled onchange="updateShift('${day}', ${index}, 'startTime', this.value)">
+        </div>
+        <div class="form-group">
+            <label for="end-${day}-${index}">End Time:</label>
+            <input type="time" id="end-${day}-${index}" disabled onchange="updateShift('${day}', ${index}, 'endTime', this.value)">
+        </div>
+        <div class="form-group">
+            <label for="loc-${day}-${index}">Location:</label>
+            <select id="loc-${day}-${index}" disabled onchange="updateShift('${day}', ${index}, 'location', this.value)">
+                <option value="Gosford">Gosford</option>
+                <option value="Islington">Islington</option>
+                <option value="Adamstown">Adamstown</option>
+            </select>
+        </div>
+        <button class="btn-remove-shift" onclick="removeShift('${day}', ${index})" disabled>Remove Shift</button>
+    `;
+    const startInput = shiftDiv.querySelector(`#start-${day}-${index}`);
+    const endInput = shiftDiv.querySelector(`#end-${day}-${index}`);
+    const locSelect = shiftDiv.querySelector(`#loc-${day}-${index}`);
+    const removeBtn = shiftDiv.querySelector('.btn-remove-shift');
+    startInput.value = shift.startTime || '';
+    endInput.value = shift.endTime || '';
+    locSelect.value = shift.location || 'Gosford';
+    // Disable remove button for the first shift to ensure at least one shift remains
+    if (index === 0) removeBtn.style.display = 'none';
+    return shiftDiv;
+}
+
+function addShift(day) {
+    const dayData = wageDetails.find(d => d.day === day);
+    const newShift = { startTime: null, endTime: null, location: 'Gosford' };
+    dayData.shifts.push(newShift);
+    const shiftsList = document.getElementById(`shifts-${day}`);
+    const index = dayData.shifts.length - 1;
+    const shiftDiv = createShiftInputs(day, index, newShift);
+    shiftsList.appendChild(shiftDiv);
+    toggleShiftInputs(day, index, true);
+    localStorage.setItem('wageDetails', JSON.stringify(wageDetails));
+}
+
+function removeShift(day, index) {
+    const dayData = wageDetails.find(d => d.day === day);
+    if (dayData.shifts.length > 1) { // Prevent removing the last shift
+        dayData.shifts.splice(index, 1);
+        const shiftsList = document.getElementById(`shifts-${day}`);
+        shiftsList.innerHTML = ''; // Clear and re-render shifts
+        dayData.shifts.forEach((shift, newIndex) => {
+            const shiftDiv = createShiftInputs(day, newIndex, shift);
+            shiftsList.appendChild(shiftDiv);
+            toggleShiftInputs(day, newIndex, true);
+        });
+        localStorage.setItem('wageDetails', JSON.stringify(wageDetails));
+    }
+}
+
+function toggleShiftInputs(day, index, enabled) {
+    const startInput = document.getElementById(`start-${day}-${index}`);
+    const endInput = document.getElementById(`end-${day}-${index}`);
+    const locSelect = document.getElementById(`loc-${day}-${index}`);
+    const removeBtn = document.querySelector(`#shifts-${day} .shift-entry:nth-child(${index + 1}) .btn-remove-shift`);
+    startInput.disabled = !enabled;
+    endInput.disabled = !enabled;
+    locSelect.disabled = !enabled;
+    if (removeBtn) removeBtn.disabled = !enabled;
+}
 
 function showCalculator() {
     const landingPage = document.getElementById('landing-page');
@@ -75,22 +133,23 @@ function showCalculator() {
 
 function toggleDay(day, checked) {
     const dayData = wageDetails.find(d => d.day === day);
-    const startInput = document.getElementById(`start-${day}`);
-    const endInput = document.getElementById(`end-${day}`);
-    const locSelect = document.getElementById(`loc-${day}`);
+    const addShiftBtn = document.getElementById(`add-shift-${day}`);
+    addShiftBtn.disabled = !checked;
 
-    startInput.disabled = !checked;
-    endInput.disabled = !checked;
-    locSelect.disabled = !checked;
+    dayData.shifts.forEach((_, index) => {
+        toggleShiftInputs(day, index, checked);
+        if (!checked) {
+            dayData.shifts[index] = { startTime: null, endTime: null, location: 'Gosford' };
+            document.getElementById(`start-${day}-${index}`).value = '';
+            document.getElementById(`end-${day}-${index}`).value = '';
+            document.getElementById(`loc-${day}-${index}`).value = 'Gosford';
+        }
+    });
 
-    if (!checked) {
-        dayData.shifts[0] = { startTime: null, endTime: null, location: 'Gosford' };
-        startInput.value = '';
-        endInput.value = '';
-        locSelect.value = 'Gosford';
-        // Save updated wageDetails to localStorage
-        localStorage.setItem('wageDetails', JSON.stringify(wageDetails));
+    if (checked && dayData.shifts.length === 0) {
+        addShift(day); // Add initial shift if none exist
     }
+    localStorage.setItem('wageDetails', JSON.stringify(wageDetails));
 }
 
 function updateShift(day, index, field, value) {
@@ -137,25 +196,26 @@ function calculateWages() {
         totalFuelCost = 0, grandTotalWages = 0;
 
     wageDetails.forEach(day => {
-        const shift = day.shifts[0];
-        if (shift.startTime && shift.endTime) {
-            const duration = calculateDuration(shift.startTime, shift.endTime);
-            const rate = getHourlyRate(shift.location, day.day, shift.startTime);
-            const earnings = duration * rate;
+        day.shifts.forEach(shift => {
+            if (shift.startTime && shift.endTime) {
+                const duration = calculateDuration(shift.startTime, shift.endTime);
+                const rate = getHourlyRate(shift.location, day.day, shift.startTime);
+                const earnings = duration * rate;
 
-            if (shift.location === 'Gosford') {
-                totalFuelCost += parseFloat(document.getElementById('fuel-cost').value);
-                getHourlyRate(shift.location, day.day, shift.startTime) === 
-                    parseFloat(document.getElementById('gosford-weekend-rate').value) ?
-                    totalHoursGosfordWeekend += duration :
-                    totalHoursGosfordWeekday += duration;
-            } else if (shift.location === 'Islington') {
-                totalHoursIslington += duration;
-            } else if (shift.location === 'Adamstown') {
-                totalHoursAdamstown += duration;
+                if (shift.location === 'Gosford') {
+                    totalFuelCost += parseFloat(document.getElementById('fuel-cost').value);
+                    getHourlyRate(shift.location, day.day, shift.startTime) === 
+                        parseFloat(document.getElementById('gosford-weekend-rate').value) ?
+                        totalHoursGosfordWeekend += duration :
+                        totalHoursGosfordWeekday += duration;
+                } else if (shift.location === 'Islington') {
+                    totalHoursIslington += duration;
+                } else if (shift.location === 'Adamstown') {
+                    totalHoursAdamstown += duration;
+                }
+                grandTotalWages += earnings;
             }
-            grandTotalWages += earnings;
-        }
+        });
     });
 
     const others = parseFloat(document.getElementById('others').value) || 0;
@@ -195,7 +255,6 @@ function showResults(data) {
     `;
     document.getElementById('result-modal').style.display = 'block';
 }
-// ...  saveAsPDF
 
 async function saveAsPDF() {
     const overlay = document.getElementById('wave-overlay');
@@ -228,24 +287,25 @@ async function saveAsPDF() {
         totalFuelCost = 0, grandTotalWages = 0;
 
     wageDetails.forEach(day => {
-        const shift = day.shifts[0];
-        if (shift.startTime && shift.endTime) {
-            const duration = calculateDuration(shift.startTime, shift.endTime);
-            const rate = getHourlyRate(shift.location, day.day, shift.startTime);
-            const earnings = duration * rate;
+        day.shifts.forEach(shift => {
+            if (shift.startTime && shift.endTime) {
+                const duration = calculateDuration(shift.startTime, shift.endTime);
+                const rate = getHourlyRate(shift.location, day.day, shift.startTime);
+                const earnings = duration * rate;
 
-            if (shift.location === 'Gosford') {
-                totalFuelCost += formData.fuelCost;
-                getHourlyRate(shift.location, day.day, shift.startTime) === formData.gosfordWeekendRate ?
-                    totalHoursGosfordWeekend += duration :
-                    totalHoursGosfordWeekday += duration;
-            } else if (shift.location === 'Islington') {
-                totalHoursIslington += duration;
-            } else if (shift.location === 'Adamstown') {
-                totalHoursAdamstown += duration;
+                if (shift.location === 'Gosford') {
+                    totalFuelCost += formData.fuelCost;
+                    getHourlyRate(shift.location, day.day, shift.startTime) === formData.gosfordWeekendRate ?
+                        totalHoursGosfordWeekend += duration :
+                        totalHoursGosfordWeekday += duration;
+                } else if (shift.location === 'Islington') {
+                    totalHoursIslington += duration;
+                } else if (shift.location === 'Adamstown') {
+                    totalHoursAdamstown += duration;
+                }
+                grandTotalWages += earnings;
             }
-            grandTotalWages += earnings;
-        }
+        });
     });
 
     grandTotalWages += totalFuelCost + formData.others - formData.taxAmount;
@@ -312,17 +372,18 @@ async function saveAsPDF() {
     drawText('Earnings', 430, y + 15, { bold: true, size: 10 });
 
     wageDetails.forEach(day => {
-        const shift = day.shifts[0];
-        if (shift.startTime && shift.endTime) {
-            const duration = calculateDuration(shift.startTime, shift.endTime);
-            const earnings = duration * getHourlyRate(shift.location, day.day, shift.startTime);
-            y = drawText(day.day, 45, y, { size: 10 });
-            drawText(shift.startTime, 120, y + 15, { size: 10 });
-            drawText(shift.endTime, 190, y + 15, { size: 10 });
-            drawText(shift.location, 260, y + 15, { size: 10 });
-            drawText(duration.toFixed(2), 360, y + 15, { size: 10 });
-            drawText(`$${earnings.toFixed(2)}`, 430, y + 15, { size: 10 });
-        }
+        day.shifts.forEach(shift => {
+            if (shift.startTime && shift.endTime) {
+                const duration = calculateDuration(shift.startTime, shift.endTime);
+                const earnings = duration * getHourlyRate(shift.location, day.day, shift.startTime);
+                y = drawText(day.day, 45, y, { size: 10 });
+                drawText(shift.startTime, 120, y + 15, { size: 10 });
+                drawText(shift.endTime, 190, y + 15, { size: 10 });
+                drawText(shift.location, 260, y + 15, { size: 10 });
+                drawText(duration.toFixed(2), 360, y + 15, { size: 10 });
+                drawText(`$${earnings.toFixed(2)}`, 430, y + 15, { size: 10 });
+            }
+        });
     });
 
     // Summary
@@ -395,15 +456,14 @@ async function saveAsPDF() {
     y = page2.getHeight() - 90;
 
     // Notes Content
- // Notes Content
-y = drawTextPage2('Expense Explanation', 40, y, { size: 16, color: rgb(0, 0.48, 1), bold: true, lineHeight: 20 });
-y = drawTextPage2(formData.expenseExplanation, 40, y, { size: 12, lineHeight: 18 });
-y -= 10;
-y = drawTextPage2('Closing Amount Details', 40, y, { size: 16, color: rgb(0, 0.48, 1), bold: true, lineHeight: 20 });
-y = drawTextPage2(`Closing Amount Day and Date: ${formData.pouchDay} (${formData.pouchDate})`, 40, y, { size: 12, lineHeight: 20 });
-y = drawTextPage2(`Closing Amount: $${formData.closingAmount.toFixed(2)}. Wages left after transfer: $${grandTotalWages.toFixed(2)}.`, 40, y, { size: 12, lineHeight: 20 });
-y = drawTextPage2(`MONEY LEFT AFTER SORTING THE WAGES: $${formData.closingAmount.toFixed(2)} - $${grandTotalWages.toFixed(2)} = $${wagesLeftOver.toFixed(2)}`, 40, y, { size: 12, bold: true, lineHeight: 20 });
-y = drawTextPage2(`The remaining amount has been left in the usual place for Gosford’s closing money.`, 40, y, { size: 12, lineHeight: 20 });
+    y = drawTextPage2('Expense Explanation', 40, y, { size: 16, color: rgb(0, 0.48, 1), bold: true, lineHeight: 20 });
+    y = drawTextPage2(formData.expenseExplanation, 40, y, { size: 12, lineHeight: 18 });
+    y -= 10;
+    y = drawTextPage2('Closing Amount Details', 40, y, { size: 16, color: rgb(0, 0.48, 1), bold: true, lineHeight: 20 });
+    y = drawTextPage2(`Closing Amount Day and Date: ${formData.pouchDay} (${formData.pouchDate})`, 40, y, { size: 12, lineHeight: 20 });
+    y = drawTextPage2(`Closing Amount: $${formData.closingAmount.toFixed(2)}. Wages left after transfer: $${grandTotalWages.toFixed(2)}.`, 40, y, { size: 12, lineHeight: 20 });
+    y = drawTextPage2(`MONEY LEFT AFTER SORTING THE WAGES: $${formData.closingAmount.toFixed(2)} - $${grandTotalWages.toFixed(2)} = $${wagesLeftOver.toFixed(2)}`, 40, y, { size: 12, bold: true, lineHeight: 20 });
+    y = drawTextPage2(`The remaining amount has been left in the usual place for Gosford’s closing money.`, 40, y, { size: 12, lineHeight: 20 });
 
     // Footer Page 2
     page2.drawRectangle({
@@ -439,8 +499,6 @@ y = drawTextPage2(`The remaining amount has been left in the usual place for Gos
     }, 2000);
 }
 
-//
-
 function closeModal() {
     document.getElementById('result-modal').style.display = 'none';
 }
@@ -449,13 +507,14 @@ function clearForm() {
     document.getElementById('wages-form').reset();
     wageDetails = days.map(day => ({ day, shifts: [{ startTime: null, endTime: null, location: 'Gosford' }] }));
     days.forEach(day => {
+        const shiftsList = document.getElementById(`shifts-${day}`);
+        shiftsList.innerHTML = '';
+        const dayData = wageDetails.find(d => d.day === day);
+        const shiftDiv = createShiftInputs(day, 0, dayData.shifts[0]);
+        shiftsList.appendChild(shiftDiv);
         document.getElementById(`check-${day}`).checked = false;
-        document.getElementById(`start-${day}`).disabled = true;
-        document.getElementById(`start-${day}`).value = '';
-        document.getElementById(`end-${day}`).disabled = true;
-        document.getElementById(`end-${day}`).value = '';
-        document.getElementById(`loc-${day}`).disabled = true;
-        document.getElementById(`loc-${day}`).value = 'Gosford';
+        toggleShiftInputs(day, 0, false);
+        document.getElementById(`add-shift-${day}`).disabled = true;
     });
     document.getElementById('expense-explanation').disabled = true;
     // Clear localStorage
