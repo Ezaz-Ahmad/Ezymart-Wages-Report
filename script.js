@@ -178,8 +178,8 @@ function getHourlyRate(location, day, startTime) {
         Gosford: isWeekend ? 
             parseFloat(document.getElementById('gosford-weekend-rate').value) : 
             parseFloat(document.getElementById('gosford-weekday-rate').value),
-        Islington: parseFloat(document.getElementById('islington-rate').value),
-        Adamstown: parseFloat(document.getElementById('adamstown-rate').value)
+        Islington: parseFloat(document.getElementById('gosford-weekend-rate').value),
+        Adamstown: parseFloat(document.getElementById('gosford-weekend-rate').value)
     };
     return rates[location] || 0;
 }
