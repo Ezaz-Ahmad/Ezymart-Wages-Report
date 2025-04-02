@@ -176,10 +176,10 @@ function getHourlyRate(location, day, startTime) {
         (day === 'Sunday' && (!startTime || parseInt(startTime.split(':')[0]) < 6));
     const rates = {
         Gosford: isWeekend ? 
-            parseFloat(document.getElementById('gosford-weekend-rate').value) : 
-            parseFloat(document.getElementById('gosford-weekday-rate').value),
-        Islington: parseFloat(document.getElementById('gosford-weekend-rate').value),
-        Adamstown: parseFloat(document.getElementById('gosford-weekend-rate').value)
+            parseFloat(document.getElementById('weekend-rate').value) : 
+            parseFloat(document.getElementById('weekday-rate').value),
+        Islington: parseFloat(document.getElementById('weekend-rate').value),
+        Adamstown: parseFloat(document.getElementById('weekend-rate').value)
     };
     return rates[location] || 0;
 }
@@ -205,7 +205,7 @@ function calculateWages() {
                 if (shift.location === 'Gosford') {
                     totalFuelCost += parseFloat(document.getElementById('fuel-cost').value);
                     getHourlyRate(shift.location, day.day, shift.startTime) === 
-                        parseFloat(document.getElementById('gosford-weekend-rate').value) ?
+                        parseFloat(document.getElementById('weekend-rate').value) ?
                         totalHoursGosfordWeekend += duration :
                         totalHoursGosfordWeekday += duration;
                 } else if (shift.location === 'Islington') {
@@ -269,10 +269,10 @@ async function saveAsPDF() {
         date: document.getElementById('date').value || 'N/A',
         employeeName: document.getElementById('employee-name').value || 'Unknown',
         employeeAddress: document.getElementById('employee-address').value || 'N/A',
-        gosfordWeekdayRate: parseFloat(document.getElementById('gosford-weekday-rate').value) || 0,
-        gosfordWeekendRate: parseFloat(document.getElementById('gosford-weekend-rate').value) || 0,
-        islingtonRate: parseFloat(document.getElementById('islington-rate').value) || 0,
-        adamstownRate: parseFloat(document.getElementById('adamstown-rate').value) || 0,
+        gosfordWeekdayRate: parseFloat(document.getElementById('weekday-rate').value) || 0,
+        gosfordWeekendRate: parseFloat(document.getElementById('weekend-rate').value) || 0,
+        islingtonRate: parseFloat(document.getElementById('weekday-rate').value) || 0,
+        adamstownRate: parseFloat(document.getElementById('weekday-rate').value) || 0,
         fuelCost: parseFloat(document.getElementById('fuel-cost').value) || 0,
         others: parseFloat(document.getElementById('others').value) || 0,
         expenseExplanation: document.getElementById('expense-explanation').value || 'No additional expenses.',
