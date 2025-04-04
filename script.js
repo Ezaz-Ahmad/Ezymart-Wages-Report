@@ -171,17 +171,12 @@ function calculateDuration(start, end) {
     return (endH * 60 + endM - (startH * 60 + startM)) / 60;
 }
 
-function getHourlyRate(location, day, startTime) {
+function getHourlyRate(day, startTime) {
     const isWeekend = day === 'Friday' || day === 'Saturday' || 
         (day === 'Sunday' && (!startTime || parseInt(startTime.split(':')[0]) < 6));
-    const rates = {
-        Gosford: isWeekend ? 
-            parseFloat(document.getElementById('weekend-rate').value) : 
-            parseFloat(document.getElementById('weekday-rate').value),
-        Islington: parseFloat(document.getElementById('weekend-rate').value),
-        Adamstown: parseFloat(document.getElementById('weekend-rate').value)
-    };
-    return rates[location] || 0;
+    return isWeekend ? 
+        parseFloat(document.getElementById('weekend-rate').value) : 
+        parseFloat(document.getElementById('weekday-rate').value);
 }
 
 function calculateWages() {
@@ -191,27 +186,17 @@ function calculateWages() {
         return;
     }
 
-    let totalHoursGosfordWeekday = 0, totalHoursGosfordWeekend = 0, 
-        totalHoursIslington = 0, totalHoursAdamstown = 0, 
-        totalFuelCost = 0, grandTotalWages = 0;
+    let totalHours = 0, totalFuelCost = 0, grandTotalWages = 0;
 
     wageDetails.forEach(day => {
         day.shifts.forEach(shift => {
             if (shift.startTime && shift.endTime) {
                 const duration = calculateDuration(shift.startTime, shift.endTime);
-                const rate = getHourlyRate(shift.location, day.day, shift.startTime);
+                const rate = getHourlyRate(day.day, shift.startTime);
                 const earnings = duration * rate;
-
+                totalHours += duration;
                 if (shift.location === 'Gosford') {
                     totalFuelCost += parseFloat(document.getElementById('fuel-cost').value);
-                    getHourlyRate(shift.location, day.day, shift.startTime) === 
-                        parseFloat(document.getElementById('weekend-rate').value) ?
-                        totalHoursGosfordWeekend += duration :
-                        totalHoursGosfordWeekday += duration;
-                } else if (shift.location === 'Islington') {
-                    totalHoursIslington += duration;
-                } else if (shift.location === 'Adamstown') {
-                    totalHoursAdamstown += duration;
                 }
                 grandTotalWages += earnings;
             }
@@ -229,24 +214,25 @@ function calculateWages() {
         date: document.getElementById('date').value,
         employeeName: document.getElementById('employee-name').value,
         employeeAddress: document.getElementById('employee-address').value,
-        totalHoursGosfordWeekday, totalHoursGosfordWeekend, totalHoursIslington,
-        totalHoursAdamstown, totalFuelCost, others, grandTotalBeforeTax, taxAmount,
-        grandTotalWages, closingAmount, wagesLeftOver
+        totalHours,
+        totalFuelCost,
+        others,
+        grandTotalBeforeTax,
+        taxAmount,
+        grandTotalWages,
+        closingAmount,
+        wagesLeftOver
     });
 }
-
 function showResults(data) {
     const content = document.getElementById('result-content');
     content.innerHTML = `
         <p><strong>Date:</strong> ${data.date}</p>
         <p><strong>Employee Name:</strong> ${data.employeeName}</p>
         <p><strong>Employee Address:</strong> ${data.employeeAddress}</p>
-        <p><strong>Total Hours in Gosford (Weekdays):</strong> ${data.totalHoursGosfordWeekday.toFixed(2)}</p>
-        <p><strong>Total Hours in Gosford (Weekends):</strong> ${data.totalHoursGosfordWeekend.toFixed(2)}</p>
-        <p><strong>Total Hours in Islington:</strong> ${data.totalHoursIslington.toFixed(2)}</p>
-        <p><strong>Total Hours in Adamstown:</strong> ${data.totalHoursAdamstown.toFixed(2)}</p>
-        <p><strong>Fuel Cost for Gosford:</strong> $${data.totalFuelCost.toFixed(2)}</p>
-        <p><strong>Other/covered shift:</strong> $${data.others.toFixed(2)}</p>
+        <p><strong>Total Hours Worked:</strong> ${data.totalHours.toFixed(2)}</p>
+        <p><strong>Fuel Cost:</strong> $${data.totalFuelCost.toFixed(2)}</p>
+        <p><strong>Other Expenses:</strong> $${data.others.toFixed(2)}</p>
         <p><strong>Grand Total Wages (Before Transfer):</strong> $${data.grandTotalBeforeTax.toFixed(2)}</p>
         <p><strong>Transferred Amount:</strong> $${data.taxAmount.toFixed(2)}</p>
         <p><strong>Grand Total Wages (After Transfer):</strong> $${data.grandTotalWages.toFixed(2)}</p>
@@ -269,10 +255,8 @@ async function saveAsPDF() {
         date: document.getElementById('date').value || 'N/A',
         employeeName: document.getElementById('employee-name').value || 'Unknown',
         employeeAddress: document.getElementById('employee-address').value || 'N/A',
-        gosfordWeekdayRate: parseFloat(document.getElementById('weekday-rate').value) || 0,
-        gosfordWeekendRate: parseFloat(document.getElementById('weekend-rate').value) || 0,
-        islingtonRate: parseFloat(document.getElementById('weekday-rate').value) || 0,
-        adamstownRate: parseFloat(document.getElementById('weekday-rate').value) || 0,
+        weekdayRate: parseFloat(document.getElementById('weekday-rate').value) || 0,
+        weekendRate: parseFloat(document.getElementById('weekend-rate').value) || 0,
         fuelCost: parseFloat(document.getElementById('fuel-cost').value) || 0,
         others: parseFloat(document.getElementById('others').value) || 0,
         expenseExplanation: document.getElementById('expense-explanation').value || 'No additional expenses.',
@@ -282,26 +266,17 @@ async function saveAsPDF() {
         closingAmount: parseFloat(document.getElementById('closing-amount').value) || 0
     };
 
-    let totalHoursGosfordWeekday = 0, totalHoursGosfordWeekend = 0, 
-        totalHoursIslington = 0, totalHoursAdamstown = 0, 
-        totalFuelCost = 0, grandTotalWages = 0;
+    let totalHours = 0, totalFuelCost = 0, grandTotalWages = 0;
 
     wageDetails.forEach(day => {
         day.shifts.forEach(shift => {
             if (shift.startTime && shift.endTime) {
                 const duration = calculateDuration(shift.startTime, shift.endTime);
-                const rate = getHourlyRate(shift.location, day.day, shift.startTime);
+                const rate = getHourlyRate(day.day, shift.startTime);
                 const earnings = duration * rate;
-
+                totalHours += duration;
                 if (shift.location === 'Gosford') {
                     totalFuelCost += formData.fuelCost;
-                    getHourlyRate(shift.location, day.day, shift.startTime) === formData.gosfordWeekendRate ?
-                        totalHoursGosfordWeekend += duration :
-                        totalHoursGosfordWeekday += duration;
-                } else if (shift.location === 'Islington') {
-                    totalHoursIslington += duration;
-                } else if (shift.location === 'Adamstown') {
-                    totalHoursAdamstown += duration;
                 }
                 grandTotalWages += earnings;
             }
@@ -311,7 +286,6 @@ async function saveAsPDF() {
     grandTotalWages += totalFuelCost + formData.others - formData.taxAmount;
     const grandTotalBeforeTax = grandTotalWages + formData.taxAmount;
     const wagesLeftOver = formData.closingAmount - grandTotalWages;
-
     // Page 1 Setup
     const page1 = pdfDoc.addPage([595, 842]); // A4 size in points
     let y = page1.getHeight() - 40;
@@ -355,55 +329,53 @@ async function saveAsPDF() {
     // Hourly Rates (Right Column)
     let rightColumnY = page1.getHeight() - 90;
     rightColumnY = drawText('Hourly Rates', 320, rightColumnY, { size: 16, color: rgb(0, 0.48, 1), bold: true, lineHeight: 20 });
-    rightColumnY = drawText(`Gosford Weekday: $${formData.gosfordWeekdayRate.toFixed(2)}`, 320, rightColumnY, { size: 12 });
-    rightColumnY = drawText(`Gosford Weekend: $${formData.gosfordWeekendRate.toFixed(2)}`, 320, rightColumnY, { size: 12 });
-    rightColumnY = drawText(`Islington: $${formData.islingtonRate.toFixed(2)}`, 320, rightColumnY, { size: 12 });
-    rightColumnY = drawText(`Adamstown: $${formData.adamstownRate.toFixed(2)}`, 320, rightColumnY, { size: 12, lineHeight: 20 });
-
+    rightColumnY = drawText(`Weekday: $${formData.weekdayRate.toFixed(2)}`, 320, rightColumnY, { size: 12 });
+    rightColumnY = drawText(`Weekend: $${formData.weekendRate.toFixed(2)}`, 320, rightColumnY, { size: 12, lineHeight: 20 });
     // Work Schedule Table
-    y -= 10;
-    y = drawText('Work Schedule', 40, y, { size: 16, color: rgb(0, 0.48, 1), bold: true, lineHeight: 20 });
-    page1.drawRectangle({ x: 40, y: y - 5, width: 515, height: 20, color: rgb(0.95, 0.95, 0.95) });
-    y = drawText('Day', 45, y, { bold: true, size: 10 });
-    drawText('Start', 120, y + 15, { bold: true, size: 10 });
-    drawText('End', 190, y + 15, { bold: true, size: 10 });
-    drawText('Location', 260, y + 15, { bold: true, size: 10 });
-    drawText('Hours', 360, y + 15, { bold: true, size: 10 });
-    drawText('Earnings', 430, y + 15, { bold: true, size: 10 });
+y -= 10;
+y = drawText('Work Schedule', 40, y, { size: 16, color: rgb(0, 0.48, 1), bold: true, lineHeight: 20 });
+page1.drawRectangle({ x: 40, y: y - 5, width: 515, height: 20, color: rgb(0.95, 0.95, 0.95) });
+y = drawText('Day', 45, y, { bold: true, size: 10 });
+drawText('Start', 120, y + 15, { bold: true, size: 10 });
+drawText('End', 190, y + 15, { bold: true, size: 10 });
+drawText('Location', 260, y + 15, { bold: true, size: 10 });
+drawText('Hours', 360, y + 15, { bold: true, size: 10 });
+drawText('Earnings', 430, y + 15, { bold: true, size: 10 });
 
-    wageDetails.forEach(day => {
-        day.shifts.forEach(shift => {
-            if (shift.startTime && shift.endTime) {
-                const duration = calculateDuration(shift.startTime, shift.endTime);
-                const earnings = duration * getHourlyRate(shift.location, day.day, shift.startTime);
-                y = drawText(day.day, 45, y, { size: 10 });
-                drawText(shift.startTime, 120, y + 15, { size: 10 });
-                drawText(shift.endTime, 190, y + 15, { size: 10 });
-                drawText(shift.location, 260, y + 15, { size: 10 });
-                drawText(duration.toFixed(2), 360, y + 15, { size: 10 });
-                drawText(`$${earnings.toFixed(2)}`, 430, y + 15, { size: 10 });
-            }
-        });
+   // Adjust y for the table content
+y -= 20; // Move down after the header row
+
+wageDetails.forEach(day => {
+    day.shifts.forEach(shift => {
+        if (shift.startTime && shift.endTime) {
+            const duration = calculateDuration(shift.startTime, shift.endTime);
+            const earnings = duration * getHourlyRate(day.day, shift.startTime);
+            y = drawText(day.day, 45, y, { size: 10, lineHeight: 15 });
+            drawText(shift.startTime, 120, y + 15, { size: 10, lineHeight: 15 });
+            drawText(shift.endTime, 190, y + 15, { size: 10, lineHeight: 15 });
+            drawText(shift.location, 260, y + 15, { size: 10, lineHeight: 15 });
+            drawText(duration.toFixed(2), 360, y + 15, { size: 10, lineHeight: 15 });
+            drawText(`$${earnings.toFixed(2)}`, 430, y + 15, { size: 10, lineHeight: 15 });
+            y -= 15; // Move down for the next row
+        }
     });
+});
 
     // Summary
-    y -= 10;
-    y = drawText('Summary', 40, y, { size: 16, color: rgb(0, 0.48, 1), bold: true, lineHeight: 20 });
-    y = drawText(`Gosford Weekday Hours: ${totalHoursGosfordWeekday.toFixed(2)}`, 40, y, { size: 12 });
-    y = drawText(`Gosford Weekend Hours: ${totalHoursGosfordWeekend.toFixed(2)}`, 40, y, { size: 12 });
-    y = drawText(`Islington Hours: ${totalHoursIslington.toFixed(2)}`, 40, y, { size: 12 });
-    y = drawText(`Adamstown Hours: ${totalHoursAdamstown.toFixed(2)}`, 40, y, { size: 12 });
-    y = drawText(`Fuel Cost: $${totalFuelCost.toFixed(2)}`, 40, y, { size: 12 });
-    y = drawText(`Other Expenses: $${formData.others.toFixed(2)}`, 40, y, { size: 12, lineHeight: 20 });
-
-    // Financial Summary (Right Column)
-    rightColumnY = Math.min(rightColumnY, y + 95);
-    rightColumnY = drawText('Financial Summary', 320, rightColumnY, { size: 16, color: rgb(0, 0.48, 1), bold: true, lineHeight: 20 });
-    rightColumnY = drawText(`Total Before Tax: $${grandTotalBeforeTax.toFixed(2)}`, 320, rightColumnY, { size: 12, bold: true, color: rgb(0.6, 0, 0) });
-    rightColumnY = drawText(`Tax/Transferred: $${formData.taxAmount.toFixed(2)}`, 320, rightColumnY, { size: 12, bold: true, color: rgb(0, 0, 0.6) });
-    rightColumnY = drawText(`Total After Tax: $${grandTotalWages.toFixed(2)}`, 320, rightColumnY, { size: 12, bold: true, color: rgb(0.6, 0, 0) });
-    rightColumnY = drawText(`Closing Amount: $${formData.closingAmount.toFixed(2)}`, 320, rightColumnY, { size: 12 });
-    rightColumnY = drawText(`AMOUNT LEFT AFTER SORTING: $${wagesLeftOver.toFixed(2)}`, 320, rightColumnY, { size: 12, bold: true, lineHeight: 20 });
+y -= 10;
+y = drawText('Summary', 40, y, { size: 16, color: rgb(0, 0.48, 1), bold: true, lineHeight: 20 });
+y = drawText(`Total Hours: ${totalHours.toFixed(2)}`, 40, y, { size: 12 });
+y = drawText(`Fuel Cost: $${totalFuelCost.toFixed(2)}`, 40, y, { size: 12 });
+y = drawText(`Other Expenses: $${formData.others.toFixed(2)}`, 40, y, { size: 12, lineHeight: 20 });
+// Financial Summary (Right Column)
+// Start Financial Summary below the Work Schedule and Summary sections
+rightColumnY = Math.min(rightColumnY, y - 20); // Ensure it starts below the Summary section
+rightColumnY = drawText('Financial Summary', 320, rightColumnY, { size: 16, color: rgb(0, 0.48, 1), bold: true, lineHeight: 20 });
+rightColumnY = drawText(`Total Before Tax: $${grandTotalBeforeTax.toFixed(2)}`, 320, rightColumnY, { size: 12, bold: true, color: rgb(0.6, 0, 0) });
+rightColumnY = drawText(`Tax/Transferred: $${formData.taxAmount.toFixed(2)}`, 320, rightColumnY, { size: 12, bold: true, color: rgb(0, 0, 0.6) });
+rightColumnY = drawText(`Total After Tax: $${grandTotalWages.toFixed(2)}`, 320, rightColumnY, { size: 12, bold: true, color: rgb(0.6, 0, 0) });
+rightColumnY = drawText(`Closing Amount: $${formData.closingAmount.toFixed(2)}`, 320, rightColumnY, { size: 12 });
+rightColumnY = drawText(`AMOUNT LEFT AFTER SORTING: $${wagesLeftOver.toFixed(2)}`, 320, rightColumnY, { size: 12, bold: true, lineHeight: 20 });
 
     // Footer Page 1
     page1.drawRectangle({
